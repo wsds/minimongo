@@ -6,7 +6,7 @@ members = [
 
 [package]
 name = "minimongo"
-version = "0.1.0"
+version = "0.5.3"
 edition = "2021"
 
 
@@ -15,8 +15,14 @@ edition = "2021"
 redb = "2.2.0"
 regex = "1.11.1"
 serde_json = "1.0"
-serde = { version = "1.0.215", features = ["derive"] }
+serde = { version = "1.0.215", default-features = false, features = ["derive"] }
 actix-web = "4.9.0"
 actix-cors = "0.7.0"
 enum_stringify = "0.6.0"
 common = { path = "common" }
+
+[profile.release]
+lto = "fat"
+debug = false
+opt-level = "s"
+panic = "abort"

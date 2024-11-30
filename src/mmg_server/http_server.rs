@@ -1,4 +1,4 @@
-use actix_web::{get, post, web, App, HttpResponse, HttpServer, Responder, Result};
+use actix_web::{get, web, App, HttpServer, Responder, Result};
 use serde::Serialize;
 use actix_cors::Cors;
 use common::helper::get_timestamp;
@@ -20,15 +20,6 @@ async fn hello_mmg() -> Result<impl Responder> {
     Ok(web::Json(hello_message))
 }
 
-#[post("/echo")]
-async fn echo(req_body: String) -> impl Responder {
-    HttpResponse::Ok().body(req_body)
-}
-
-async fn manual_hello() -> impl Responder {
-    HttpResponse::Ok().body("Hey there!")
-}
-
 #[actix_web::main]
 pub async fn start_mmg_server() -> std::io::Result<()> {
     let factory = || {
@@ -40,8 +31,7 @@ pub async fn start_mmg_server() -> std::io::Result<()> {
         App::new()
             .wrap(Cors::permissive())
             .service(cdp_scope)
-            .service(hello_mmg).service(echo)
-            .route("/hey", web::get().to(manual_hello))
+            .service(hello_mmg)
     };
     HttpServer::new(factory).bind(("127.0.0.1", 16655))?.run().await
 }

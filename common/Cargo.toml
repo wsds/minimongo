@@ -10,3 +10,9 @@ sha2 = "0.11.0-pre.3"
 base64 = "0.22.1"
 regex = "1.10.3"
 twox-hash = { version = "2.0.1", features = ["xxhash32"] }
+
+[profile.release]
+lto = "fat"
+debug = false
+opt-level = "z"
+panic = "abort"

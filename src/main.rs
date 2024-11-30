@@ -1,8 +1,13 @@
+use ::minimongo::mmg_server::http_server::start_mmg_server;
+
 mod minimongo;
 mod mmg_server;
 
 fn main() {
-    println!("Hello, world!");
+    println!("mmg_server is starting!");
+    println!("准备开启mmg_server");
+    let _ = start_mmg_server();
+    println!("完成开启mmg_server");
 }
 
 
