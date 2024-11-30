@@ -1,12 +1,10 @@
 use std::cmp::Ordering;
 use std::fmt::{Debug, Formatter};
 use redb::{Key, ReadOnlyTable, ReadTransaction, Table, TableDefinition, TypeName, Value, WriteTransaction};
-use regex::Regex;
-use serde::{Deserialize, Deserializer, Serialize, Serializer};
-use serde::de::{Error, Visitor};
+// use regex::Regex;
 
-#[derive(Debug)]
-pub struct MyRegex(Regex);
+// #[derive(Debug)]
+// pub struct MyRegex(Regex);
 
 // impl Serialize for MyRegex {
 //     fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
@@ -39,7 +37,7 @@ pub struct MyRegex(Regex);
 pub struct MyF64(pub f64);
 
 impl Debug for MyF64 {
-    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+    fn fmt(&self, _f: &mut Formatter<'_>) -> std::fmt::Result {
         todo!()
     }
 }

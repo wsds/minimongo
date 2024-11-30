@@ -1,16 +1,14 @@
-use std::cmp::Ordering;
 use std::collections::{BTreeMap, HashMap};
-use std::fmt::{Debug, Formatter};
+use std::fmt::{Debug};
 use std::fs;
 use std::path::Path;
 use std::sync::{Arc, LazyLock, RwLock};
 
-use actix_web::web::Json;
-use redb::{AccessGuard, Database, Key, ReadableTable, ReadTransaction, TableDefinition, TypeName, MultimapTableDefinition, ReadableMultimapTable};
+use redb::{Database, ReadableTable, ReadTransaction, TableDefinition, MultimapTableDefinition, ReadableMultimapTable};
 use serde::{Deserialize, Serialize};
-use serde_json::{json, Value};
+use serde_json::{Value};
 use common::helper::hash_to_u32;
-use crate::minimongo::query::{parse_query, UpdateType};
+use crate::minimongo::query::{UpdateType};
 use crate::minimongo::query_helper::{MyF64, open_table_read, open_table_write};
 
 static MGDB_MAP: LazyLock<RwLock<HashMap<String, Arc<MgDb>>>> = LazyLock::new(|| {
@@ -19,11 +17,9 @@ static MGDB_MAP: LazyLock<RwLock<HashMap<String, Arc<MgDb>>>> = LazyLock::new(||
     _map_rw
 });
 
-const SQL_STR_1: &str = include_str!("Test1.SQL");
-
 pub struct MgDb {
     pub db: Database,
-    pub workspace_nanoid: String,
+    pub _workspace_nanoid: String,
     pub collection_map: RwLock<BTreeMap<String, Collection>>,
     pub counter_map: RwLock<BTreeMap<String, u32>>,
 }
@@ -57,15 +53,13 @@ pub struct Collection {
 // }
 // }
 pub fn get_mgdb(workspace_nanoid: String) -> Arc<MgDb> {
-    let mut need_create = false;
+    let  need_create;
 
     {
         let db_map_lock = MGDB_MAP.read().unwrap();
         let db_option = db_map_lock.get(&workspace_nanoid);
         if let Some(db) = db_option {
             return db.clone();
-        } else {
-            need_create = true;
         }
     }
 
@@ -102,7 +96,7 @@ pub fn get_mgdb(workspace_nanoid: String) -> Arc<MgDb> {
         let counter_table_result = read_txn.open_table(COUNTER_TABLE);
         if let Ok(table) = counter_table_result {
             let mut iter = table.iter().unwrap();
-            'label: while let Some(kv) = iter.next() {
+            '_label: while let Some(kv) = iter.next() {
                 if let Ok((key, value)) = kv {
                     let counter_name = key.value();
                     let number = value.value();
@@ -125,13 +119,13 @@ pub fn get_mgdb(workspace_nanoid: String) -> Arc<MgDb> {
 
     let mg_db = MgDb {
         db,
-        workspace_nanoid: workspace_nanoid.clone(),
+        _workspace_nanoid: workspace_nanoid.clone(),
         collection_map: RwLock::new(collection_map),
         counter_map: RwLock::new(counter_map),
     };
     let db_arc = Arc::new(mg_db);
 
-    if (need_create) {
+    if need_create {
         db_map_lock.insert(workspace_nanoid, db_arc.clone());
         drop(db_map_lock);
     }
@@ -242,12 +236,12 @@ impl MgDb {
         }
     }
 
-    fn add_index(&self, collection_name: &String, field_name: &String) {}
+    fn _add_index(&self, _collection_name: &String, _field_name: &String) {}
     pub fn update_records(&self, collection_name: &String, records: Vec<Value>, update_type: UpdateType) {
-        let mut primary_key;
-        let mut indexes_f64_list: Vec<String>;
-        let mut indexes_string_list: Vec<String>;
-        let mut indexes_string_unique_list: Vec<String>;
+        let primary_key;
+        let indexes_f64_list: Vec<String>;
+        let indexes_string_list: Vec<String>;
+        let indexes_string_unique_list: Vec<String>;
 
         {
             let collection_map_lock = self.collection_map.read().unwrap();
@@ -343,9 +337,9 @@ impl MgDb {
                             if let Some(str) = str_option {
                                 let collection_name_index = format!("{}@stringU@{}", collection_name, index_string);
                                 let mut index_table = open_table_write::<&str, u32>(&collection_name_index, &write_txn);
-                                let mut is_conflict = false;
+                                let is_conflict;
                                 {
-                                    let mut conflict_record_id_option = index_table.get(*str).unwrap();
+                                    let conflict_record_id_option = index_table.get(*str).unwrap();
                                     is_conflict = conflict_record_id_option.is_some();
                                 }
 
@@ -476,7 +470,7 @@ impl MgDb {
     }
 
 
-    fn list_all_records(&self, collection_name: &String) -> Vec<Value> {
+    fn _list_all_records(&self, collection_name: &String) -> Vec<Value> {
         let mut records = Vec::new();
         {
             let read_txn = self.db.begin_read().unwrap();
@@ -494,7 +488,7 @@ impl MgDb {
         return records;
     }
 
-    fn show_collection_inner(&self, collection_name: &String) -> (HashMap<String, u32>, HashMap<String, u32>, Vec<String>) {
+    fn _show_collection_inner(&self, collection_name: &String) -> (HashMap<String, u32>, HashMap<String, u32>, Vec<String>) {
         let mut primary_key_map = HashMap::new();
         let mut counter_map = HashMap::new();
         let mut collection_define_map = HashMap::new();
@@ -519,7 +513,7 @@ impl MgDb {
 
             {
                 let collection_name_f64 = format!("{collection_name}#f64#");
-                let mut f64_table = open_table_read::<(u32, u32), f64>(&collection_name_f64, &read_txn);
+                let f64_table = open_table_read::<(u32, u32), f64>(&collection_name_f64, &read_txn);
                 let mut table_iter = f64_table.iter().unwrap();
                 while let Some(kv) = table_iter.next() {
                     if let Ok((key_lock, value_lock)) = kv {
@@ -532,9 +526,9 @@ impl MgDb {
             }
 
             {
-                let mut counter_table = read_txn.open_table(COUNTER_TABLE).unwrap();
+                let counter_table = read_txn.open_table(COUNTER_TABLE).unwrap();
                 let mut counter_table_iter = counter_table.iter().unwrap();
-                'label1: while let Some(kv_counter) = counter_table_iter.next() {
+                '_label1: while let Some(kv_counter) = counter_table_iter.next() {
                     if let Ok((key_lock, value_lock)) = kv_counter {
                         let counter_name = key_lock.value();
                         let number = value_lock.value();
@@ -544,7 +538,7 @@ impl MgDb {
             }
 
             {
-                let mut collection_define_table = read_txn.open_table(COLLECTION_DEFINE_TABLE).unwrap();
+                let collection_define_table = read_txn.open_table(COLLECTION_DEFINE_TABLE).unwrap();
                 let mut collection_define_table_iter = collection_define_table.iter().unwrap();
                 while let Some(kv) = collection_define_table_iter.next() {
                     if let Ok((key_lock, value_lock)) = kv {
@@ -611,7 +605,7 @@ impl MgDb {
                 index_list);
     }
 
-    fn read_db(&self) -> ReadTransaction {
+    fn _read_db(&self) -> ReadTransaction {
         let read_txn = self.db.begin_read().unwrap();
         read_txn
     }
@@ -620,17 +614,16 @@ impl MgDb {
 #[cfg(test)]
 pub(crate) mod tests {
     use std::{env, fs};
-    use std::collections::{BTreeSet, HashSet};
+    use std::collections::{HashSet};
     use std::ops::Deref;
     use std::path::Path;
 
     use redb::{Database, ReadableTableMetadata, TableDefinition};
+    use serde_json::json;
 
     use super::*;
 
-    const SLICE_TABLE: TableDefinition<&[u8], &[u8]> = TableDefinition::new("slice");
     const STR_TABLE: TableDefinition<&str, &str> = TableDefinition::new("x");
-    const U64_TABLE: TableDefinition<u64, u64> = TableDefinition::new("u64");
     pub(crate) const DB_NAME: &str = "AABBCC_10015";
     const COLLECTION_NAME: &str = "Books";
 
@@ -729,7 +722,7 @@ pub(crate) mod tests {
         let records = vec![value_1, value_2];
 
         mg_db.update_records(&COLLECTION_NAME.to_string(), records, UpdateType::Merge);
-        let records = mg_db.list_all_records(&COLLECTION_NAME.to_string());
+        let records = mg_db._list_all_records(&COLLECTION_NAME.to_string());
         for record in records {
             println!("{}", serde_json::to_string(&record).unwrap());
         }
@@ -765,12 +758,12 @@ pub(crate) mod tests {
 
         // mg_db.update_records(&collection_name, records, UpdateType::UpdateOnly);
         mg_db.update_records(&collection_name, records, UpdateType::CreateOnlY);
-        let records = mg_db.list_all_records(&collection_name);
+        let records = mg_db._list_all_records(&collection_name);
         for record in records {
             println!("{}", serde_json::to_string(&record).unwrap());
         }
 
-        let (primary_key_map) = mg_db.show_collection_inner(&collection_name);
+        let primary_key_map = mg_db._show_collection_inner(&collection_name);
         println!("primary_key_map:{:#?}", primary_key_map);
 
         println!("测试完毕: test_update_records");
@@ -805,12 +798,12 @@ pub(crate) mod tests {
 
         // mg_db.update_records(&collection_name, records, UpdateType::CreateOnlY);
         mg_db.update_records(&collection_name, records, UpdateType::CreateOnlY);
-        let records = mg_db.list_all_records(&collection_name);
+        let records = mg_db._list_all_records(&collection_name);
         for record in records {
             println!("{}", serde_json::to_string(&record).unwrap());
         }
 
-        let info = mg_db.show_collection_inner(&collection_name);
+        let info = mg_db._show_collection_inner(&collection_name);
         println!("primary_key_map:{:#?}", info);
 
         println!("测试完毕: test_update_records");
@@ -825,11 +818,11 @@ pub(crate) mod tests {
         let index_f64 = "price".to_string();
 
         let mg_db = get_mgdb(DB_NAME.to_string());
-        let read_txn = mg_db.read_db();
+        let read_txn = mg_db._read_db();
         let collection_name_index = format!("{}@f64@{}", collection_name, index_f64);
         let index_table_define = TableDefinition::<(MyF64, u32), ()>::new(collection_name_index.as_str());
         let index_table = read_txn.open_table(index_table_define).unwrap();
-        let mut range_cursor = index_table.range((MyF64(100.0), 0)..=(MyF64(106.0), u32::MAX)).unwrap();
+        let range_cursor = index_table.range((MyF64(100.0), 0)..=(MyF64(106.0), u32::MAX)).unwrap();
         // while let Some(kv_counter) = range_cursor.next() {
         //     if let Ok((key_lock, value_lock)) = kv_counter {
         //         let key = key_lock.value();
@@ -862,7 +855,7 @@ pub(crate) mod tests {
         let key = "Math";
 
         let mg_db = get_mgdb(DB_NAME.to_string());
-        let read_txn = mg_db.read_db();
+        let read_txn = mg_db._read_db();
 
         let collection_name_index = format!("{}@string@{}", collection_name, index_string);
         let index_table_define: MultimapTableDefinition<&str, u32> = MultimapTableDefinition::new(collection_name_index.as_str());
@@ -889,7 +882,7 @@ pub(crate) mod tests {
         let collection_name = COLLECTION_NAME.to_string();
 
         let mg_db = get_mgdb(DB_NAME.to_string());
-        let info = mg_db.show_collection_inner(&collection_name);
+        let info = mg_db._show_collection_inner(&collection_name);
         println!("primary_key_map:{:#?}", info);
 
         println!("测试完毕: test_update_records");

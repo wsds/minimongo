@@ -1,10 +1,6 @@
-use std::process::Command;
-use std::thread;
-use std::time::{Duration, SystemTime, UNIX_EPOCH};
-use actix_web::{get, post, web, App, HttpResponse, HttpServer, Responder, Result, middleware};
+use actix_web::{get, post, web, App, HttpResponse, HttpServer, Responder, Result};
 use serde::Serialize;
 use actix_cors::Cors;
-use actix_web::http::header;
 use common::helper::get_timestamp;
 use crate::minimongo::mmg;
 
@@ -13,6 +9,7 @@ struct HelloMassage {
     message: String,
     timestamp: u128,
 }
+
 #[get("/")]
 async fn hello_mmg() -> Result<impl Responder> {
     let timestamp = get_timestamp();

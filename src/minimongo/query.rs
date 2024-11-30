@@ -1,11 +1,10 @@
-use std::collections::{BTreeSet, HashMap};
-use std::sync::{Arc, LazyLock, RwLock};
+use std::collections::{BTreeSet};
+use std::sync::{LazyLock};
 use enum_stringify::EnumStringify;
 use serde::{Deserialize, Serialize};
 use serde_json::{json, Value};
 use regex::Regex;
 use crate::minimongo::executor::DEFAULT_LIMIT;
-use crate::minimongo::query_helper::MyRegex;
 
 #[derive(Debug, Serialize, Deserialize)]
 pub enum UpdateType {
@@ -69,7 +68,7 @@ impl Number {
         return false;
     }
 
-    pub fn is_ref(&self) -> bool {
+    pub fn _is_ref(&self) -> bool {
         match self {
             Number::Int64(_) => {}
             Number::Float64(_) => {}
@@ -144,7 +143,7 @@ pub struct Expression {
 }
 
 #[derive(Debug, Serialize, Deserialize, Default)]
-enum WriteAction {
+pub enum WriteAction {
     #[default]
     NONE,
     DELETE,
@@ -359,8 +358,8 @@ fn parse_order_by(words: &Vec<&str>, query: &mut Query) {
         return;
     }
     let field = words[1].to_string();
-    let mut limit;
-    let mut skip;
+    let limit;
+    let skip;
 
     let skip_index = words.iter().position(|&w| w == "SKIP").unwrap_or(0);
     if len > skip_index + 1 && skip_index > 0 {
@@ -485,11 +484,8 @@ fn parse_condition_block(words: &Vec<&str>) -> Where {
 
     let mut conditions = Vec::new();
 
-    // let current_condition= Condition::def
     let mut current_words: Vec<&str> = Vec::new();
-    let mut is_not = false;
 
-    // while let Some(word) = block_words.iter().next() {
     for word in block_words {
         match parse_keyword_and_number(word) {
             None => {
@@ -614,8 +610,8 @@ fn string_to_number(input: &str) -> Number {
 }
 
 fn parse_range_expression(expression: &str) -> (Number, String, Number) {
-    let mut asc_parts = expression.split('<').collect::<Vec<&str>>();
-    let mut desc_parts = expression.split('>').collect::<Vec<&str>>();
+    let asc_parts = expression.split('<').collect::<Vec<&str>>();
+    let desc_parts = expression.split('>').collect::<Vec<&str>>();
     // println!("test_string_parse:{:#?}", asc_parts);
     // println!("test_string_parse:{:#?}", desc_parts);
     let mut is_asc = true;

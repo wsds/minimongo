@@ -1,5 +1,6 @@
-use std::collections::{BTreeMap, BTreeSet, HashMap, HashSet};
-use redb::{AccessGuard, MultimapTableDefinition, ReadableMultimapTable, ReadableTable, ReadableTableMetadata, ReadOnlyMultimapTable, ReadOnlyTable, ReadTransaction, TableDefinition, WriteTransaction};
+use std::collections::{BTreeMap, BTreeSet, HashMap};
+use redb::{MultimapTableDefinition, ReadableMultimapTable, ReadableTable, ReadableTableMetadata, ReadOnlyMultimapTable, ReadOnlyTable,
+           ReadTransaction, };
 use regex::Regex;
 use serde_json::Value;
 use common::helper::hash_to_u32;
@@ -84,7 +85,7 @@ impl MgDb {
         final_result
     }
 
-    fn execute_create(&self, query: &Query, context: &mut QueryContext) {}
+    fn execute_create(&self, _query: &Query, _context: &mut QueryContext) {}
     fn execute_select(&self, query: &Query, context: &mut QueryContext) {
         if let MainAction::SELECT { target_collection, one } = &query.main_action {
             let collection = self.get_collection(target_collection);
@@ -144,7 +145,7 @@ impl MgDb {
         }
     }
 
-    fn execute_group(&self, query: &Query, context: &mut QueryContext) {}
+    fn execute_group(&self, _query: &Query, _context: &mut QueryContext) {}
 }
 
 fn export_data(ordered_ids: Vec<u32>, field_name_list: Vec<String>, collection: Collection, context: &mut QueryContext, read_txn: ReadTransaction, as_action: &String, one: &bool) {
@@ -206,14 +207,14 @@ where
 
 fn default_record_ids(collection: &Collection, read_txn: &ReadTransaction) -> Vec<u32> {
     let collection_table = open_table_read::<u32, String>(&collection.collection_name, &read_txn);
-    let mut table_iter = collection_table.iter().unwrap();
+    let table_iter = collection_table.iter().unwrap();
     let limit = DEFAULT_LIMIT;
     let lock_ids = table_iter.take(limit);
     let ids: Vec<u32> = lock_ids.map(|id_result| id_result.unwrap().0.value()).collect();
     ids
 }
 
-fn order_record_ids(collection: &Collection, order_by: &OrderBy, read_txn: &ReadTransaction, mut filtered_record_ids_option: Option<BTreeSet<u32>>, context: &mut QueryContext) -> Vec<u32> {
+fn order_record_ids(collection: &Collection, order_by: &OrderBy, read_txn: &ReadTransaction, filtered_record_ids_option: Option<BTreeSet<u32>>, context: &mut QueryContext) -> Vec<u32> {
     let mut skip: usize = 0;
     let mut limit: usize = DEFAULT_LIMIT;
     let skip_value = resolve_one_value_ref(&order_by.skip, context);
@@ -234,7 +235,7 @@ fn order_record_ids(collection: &Collection, order_by: &OrderBy, read_txn: &Read
                 None => {
                     let collection_name_index = format!("{}@f64@{}", collection.collection_name, order_by.field);
                     let index_table = open_table_read::<(MyF64, u32), ()>(&collection_name_index, &read_txn);
-                    let mut index_table_iter = index_table.iter().unwrap();
+                    let index_table_iter = index_table.iter().unwrap();
                     let ordered_ids = match order_by.order_direction {
                         OrderDirection::ASC => {
                             let lock_ids = index_table_iter.skip(skip).take(limit);
@@ -250,7 +251,7 @@ fn order_record_ids(collection: &Collection, order_by: &OrderBy, read_txn: &Read
                 Some(record_ids) => {
                     let mut results = Vec::new();
                     let collection_name_f64 = format!("{}#f64#", collection.collection_name);
-                    let mut f64_table = open_table_read::<(u32, u32), f64>(&collection_name_f64, &read_txn);
+                    let f64_table = open_table_read::<(u32, u32), f64>(&collection_name_f64, &read_txn);
                     for &record_id in &record_ids {
                         if let Some(value_lock) = f64_table.get((record_id, field_id)).unwrap() {
                             let value = value_lock.value();
@@ -279,8 +280,6 @@ fn order_record_ids(collection: &Collection, order_by: &OrderBy, read_txn: &Read
 }
 
 fn filter_records(collection: &Collection, wheres: &Where, context: &mut QueryContext, read_txn: &ReadTransaction) -> BTreeSet<u32> {
-    let mut record_ids = BTreeSet::new();
-
     let mut condition_results = Vec::new();
 
     for condition in &wheres.conditions {
@@ -299,7 +298,7 @@ fn filter_records(collection: &Collection, wheres: &Where, context: &mut QueryCo
     }
     // println!("判断 condition_results: {condition_results:#?}");
 
-    record_ids = resolve_condition_results_if(condition_results, read_txn, collection);
+    let record_ids = resolve_condition_results_if(condition_results, read_txn, collection);
 
     // println!("合并结果: {record_ids:#?}");
 
@@ -352,7 +351,7 @@ fn resolve_condition_results_recursive(condition_results: &[ConditionResult]) ->
     LazySet::new(BTreeSet::new())
 }
 
-fn resolve_condition_results(condition_results: Vec<ConditionResult>) -> BTreeSet<u32> {
+fn _resolve_condition_results(condition_results: Vec<ConditionResult>) -> BTreeSet<u32> {
     let result = resolve_condition_results_recursive(&condition_results);
     let evaluated = result.evaluate();
     evaluated
@@ -366,7 +365,7 @@ fn resolve_condition_results_if(condition_results: Vec<ConditionResult>, read_tx
     };
     let get_full_set = || {
         let collection_table = open_table_read::<u32, String>(&collection.collection_name, &read_txn);
-        let mut table_iter = collection_table.iter().unwrap();
+        let table_iter = collection_table.iter().unwrap();
         let lock_ids = table_iter.take(MAX_FULL_LEN as usize);
         let ids: BTreeSet<u32> = lock_ids.map(|id_result| id_result.unwrap().0.value()).collect();
         ids
@@ -393,12 +392,12 @@ fn filter_records_by_condition(collection: &Collection, condition: &ConditionExp
         ConditionFieldType::String => {
             let collection_name_index = format!("{}@string@{}", collection.collection_name, condition.target_field);
             let index_table_define: MultimapTableDefinition<&str, u32> = MultimapTableDefinition::new(collection_name_index.as_str());
-            let mut index_table = read_txn.open_multimap_table(index_table_define).unwrap();
+            let index_table = read_txn.open_multimap_table(index_table_define).unwrap();
             filter_id_from_table_string(&index_table, &condition.expression_entity, context)
         }
         ConditionFieldType::StringUnique => {
             let collection_name_index = format!("{}@stringU@{}", collection.collection_name, condition.target_field);
-            let mut index_table = open_table_read::<&str, u32>(&collection_name_index, &read_txn);
+            let index_table = open_table_read::<&str, u32>(&collection_name_index, &read_txn);
             filter_id_from_table_string_unique(&index_table, &condition.expression_entity, context)
         }
         ConditionFieldType::NoIndex => {
@@ -423,14 +422,14 @@ fn number_to_f64(number: &Number, context: &QueryContext) -> f64 {
 }
 
 fn filter_id_from_table_f64(table: &ReadOnlyTable<(MyF64, u32), ()>, expression_entity: &ExpressionEntity, context: &mut QueryContext) -> BTreeSet<u32> {
-    let mut record_ids = match expression_entity {
+    let record_ids = match expression_entity {
         ExpressionEntity::IN { .. } => { BTreeSet::new() }
         ExpressionEntity::EQUAL { .. } => { BTreeSet::new() }
         ExpressionEntity::RANGE { max, min } => {
             let max_f64 = number_to_f64(max, context);
             let min_f64 = number_to_f64(min, context);
 
-            let mut range_cursor = table.range((MyF64(min_f64), 0)..=(MyF64(max_f64), u32::MAX)).unwrap();
+            let range_cursor = table.range((MyF64(min_f64), 0)..=(MyF64(max_f64), u32::MAX)).unwrap();
             let ids_map = range_cursor.map(|v| v.unwrap().0.value().1);
             let record_ids: BTreeSet<_> = ids_map.collect();
             record_ids
@@ -543,7 +542,7 @@ fn resolve_one_value_ref(value_ref: &ValueRef, context: &QueryContext) -> Value 
     let mut value = Value::Null;
     match value_ref {
         ValueRef::Ref(key) => {
-            let mut value_option = context.params.get(key);
+            let value_option = context.params.get(key);
             if value_option.is_none() {
                 let value_pack_option = context.variables.get(key);
                 if let Some(value_pack) = value_pack_option {
@@ -567,7 +566,7 @@ fn resolve_list_value_ref(value_ref: &ValueRef, context: &mut QueryContext) -> V
     let mut this_value = Value::Null;
     match value_ref {
         ValueRef::Ref(key) => {
-            let mut value_option = context.params.get(key);
+            let value_option = context.params.get(key);
             if value_option.is_none() {
                 let value_pack_option = context.variables.get(key);
                 if let Some(value_pack) = value_pack_option {
@@ -625,7 +624,7 @@ enum ConditionFieldType {
 mod tests {
     use std::collections::{BTreeMap, BTreeSet};
     use serde_json::{json, Value};
-    use crate::minimongo::executor::{paginate, resolve_condition_results};
+    use crate::minimongo::executor::{_resolve_condition_results, paginate};
     use crate::minimongo::minimongo::get_mgdb;
     use crate::minimongo::minimongo::tests::DB_NAME;
     use crate::minimongo::query::{ConditionOperation, ConditionResult};
@@ -639,9 +638,9 @@ mod tests {
         println!("do_some_test_03");
         println!("{}", SQL_STR_2);
         println!("do_some_test_03 done 88888888888888888888");
-        let A = "AAAA".to_string();
-        let B = "AAAA".to_string();
-        let c = A == B;
+        let a = "AAAA".to_string();
+        let b = "AAAA".to_string();
+        let _c = a == b;
         Ok(())
     }
 
@@ -700,7 +699,7 @@ mod tests {
             ConditionResult::IDS(set3),
         ];
 
-        let result = resolve_condition_results(condition_results);
+        let result = _resolve_condition_results(condition_results);
 
         println!("Final Result: {:?}", result)
     }
@@ -717,7 +716,7 @@ mod tests {
             ConditionResult::IDS(set2),
         ];
 
-        let result = resolve_condition_results(condition_results);
+        let result = _resolve_condition_results(condition_results);
 
         println!("Final Result: {:?}", result)
     }
@@ -733,6 +732,7 @@ mod tests {
         println!("{:#?}", result);
     }
 
+    #[test]
     fn test_take_from_json() {
         let mut v = json!({ "x": "y" });
         assert_eq!(v["x"].take(), json!("y"));

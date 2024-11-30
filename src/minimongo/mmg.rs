@@ -8,7 +8,7 @@ use serde::{Deserialize, Serialize};
 
 #[derive(Deserialize, Serialize, Debug)]
 pub struct Info {
-    MMG: String,
+    mmg: String,
     timestamp: u128,
 }
 
@@ -19,7 +19,7 @@ pub async fn greet(name: web::Path<String>) -> web::Json<Info> {
     println!("最简请求: greet @{timestamp}");
 
     web::Json(Info {
-        MMG: name.clone(),
+        mmg: name.clone(),
         timestamp,
     })
 }
@@ -129,7 +129,7 @@ pub async fn query(data: web::Json<QueryRequest>) -> web::Json<QueryResponse> {
 #[post("/query_raw")]
 pub async fn query_raw(data: web::Json<QueryRequest>) -> web::Json<BTreeMap<String, Value>> {
     // println!("准备 query : {data:#?}");
-    let timestamp = get_timestamp();
+    let _timestamp = get_timestamp();
 
     let mg_db = get_mgdb(data.0.workspace_id);
     let final_result = mg_db.query_records(&data.0.query, data.0.params);

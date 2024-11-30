@@ -1,4 +1,3 @@
-#[allow(warnings)]
 pub mod minimongo;
 mod query;
 mod query_helper;
