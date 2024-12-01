@@ -7,7 +7,7 @@ use std::sync::{Arc, LazyLock, RwLock};
 use redb::{Database, ReadableTable, ReadTransaction, TableDefinition, MultimapTableDefinition, ReadableMultimapTable};
 use serde::{Deserialize, Serialize};
 use serde_json::{Value};
-use mini_common::helper::hash_to_u32;
+use crate::common::helper::hash_to_u32;
 use crate::minimongo::query::{UpdateType};
 use crate::minimongo::query_helper::{MyF64, open_table_read, open_table_write};
 

@@ -1,6 +1,7 @@
 
 pub mod minimongo;
 pub mod mmg_server;
+pub mod common;
 
 pub use mmg_server::http_server::start_mmg_server;
 pub use minimongo::minimongo::get_mgdb;

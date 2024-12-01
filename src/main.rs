@@ -2,6 +2,7 @@ use ::minimongo::mmg_server::http_server::start_mmg_server;
 
 mod minimongo;
 mod mmg_server;
+pub mod common;
 
 fn main() {
     println!("mmg_server is starting!");

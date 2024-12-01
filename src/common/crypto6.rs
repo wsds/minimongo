@@ -1,4 +1,5 @@
-use sha2::digest::Output;
+use base64::Engine;
+use base64::prelude::BASE64_STANDARD;
 use sha2::{Sha256, Digest};
 use regex::Regex;
 
@@ -8,7 +9,7 @@ pub fn u8_to_hex(u8: &[u8]) -> String {
 }
 
 pub fn u8_to_base64(u8: &[u8]) -> String {
-    let encoded = base64::encode(u8);
+    let encoded = BASE64_STANDARD.encode(u8);
     encoded
 }
 
