@@ -34,7 +34,7 @@ pub async fn start_mmg_server() -> std::io::Result<()> {
             .service(cdp_scope)
             .service(hello_mmg)
     };
-    HttpServer::new(factory).bind(("127.0.0.1", 16655))?.run().await
+    HttpServer::new(factory).bind(("0.0.0.0", 16655))?.run().await
 }
 
 pub fn start_mmg_server_sub_thread() {
