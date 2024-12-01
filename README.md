@@ -1,0 +1,1 @@
+A pure Rust db for JSON, like mongo db

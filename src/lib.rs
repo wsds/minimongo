@@ -2,6 +2,8 @@
 pub mod minimongo;
 pub mod mmg_server;
 
+pub use mmg_server::http_server::start_mmg_server;
+pub use minimongo::minimongo::get_mgdb;
 pub fn add(left: usize, right: usize) -> usize {
     left + right
 }

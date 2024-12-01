@@ -8,6 +8,13 @@ members = [
 name = "minimongo"
 version = "0.5.3"
 edition = "2021"
+authors = ["wsds <wsds88801@163.com>"]  # 作者信息
+description = "A pure Rust db for JSON, like mongo db"  # 必填，简要描述
+license = "Apache-2.0"  # 许可证信息（如 MIT、Apache-2.0）
+repository = "https://github.com/wsds/minimongo"  # 可选，代码仓库链接
+keywords = ["mongodb", "json", "db"]  # 可选，关键词
+categories = ["development-tools"]  # 可选，crates.io 支持的分类
+readme = "README.md"
 
 
 
