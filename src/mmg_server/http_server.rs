@@ -1,7 +1,7 @@
 use actix_web::{get, web, App, HttpServer, Responder, Result};
 use serde::Serialize;
 use actix_cors::Cors;
-use common::helper::get_timestamp;
+use mini_common::helper::get_timestamp;
 use crate::minimongo::mmg;
 
 #[derive(Serialize)]

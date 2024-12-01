@@ -3,7 +3,7 @@ use redb::{MultimapTableDefinition, ReadableMultimapTable, ReadableTable, Readab
            ReadTransaction, };
 use regex::Regex;
 use serde_json::Value;
-use common::helper::hash_to_u32;
+use mini_common::helper::hash_to_u32;
 use serde::{Deserialize, Serialize};
 use crate::minimongo::lazy_set::{LazySet, MAX_FULL_LEN};
 use crate::minimongo::minimongo::{Collection, MgDb};
