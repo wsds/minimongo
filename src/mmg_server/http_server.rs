@@ -1,3 +1,4 @@
+use std::thread;
 use actix_web::{get, web, App, HttpServer, Responder, Result};
 use serde::Serialize;
 use actix_cors::Cors;
@@ -36,6 +37,14 @@ pub async fn start_mmg_server() -> std::io::Result<()> {
     HttpServer::new(factory).bind(("127.0.0.1", 16655))?.run().await
 }
 
+pub fn start_mmg_server_sub_thread() {
+    thread::spawn(|| {
+        println!("start mini_mongo_server in sub_thread. 1002");
+        let _ = start_mmg_server();
+        println!("start mini_mongo_server finished. 1002");
+    });
+}
+
 
 #[cfg(test)]
 mod tests {
@@ -56,6 +65,15 @@ mod tests {
         let _ = start_mmg_server();
         println!("测试完成: test_start_mmg_server");
 
+        Ok(())
+    }
+
+    //cargo test test_start_mmg_server_sub_thread -- --nocapture
+    #[test]
+    fn test_start_mmg_server_sub_thread() -> Result<(), Box<i32>> {
+        println!("准备测试: test_start_mmg_server_sub_thread");
+        let _ = start_mmg_server_sub_thread();
+        println!("测试完成: test_start_mmg_server_sub_thread");
         Ok(())
     }
 }

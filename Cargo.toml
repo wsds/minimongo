@@ -1,6 +1,6 @@
 [package]
 name = "minimongo"
-version = "0.5.3"
+version = "0.5.4"
 edition = "2021"
 authors = ["wsds <wsds88801@163.com>"]  # 作者信息
 description = "A pure Rust db for JSON, like mongo db"  # 必填，简要描述
@@ -23,8 +23,14 @@ twox-hash = { version = "2.0.1", features = ["xxhash32"] }
 sha2 = "0.11.0-pre.4"
 base64 = "0.22.1"
 
+
+[profile.dev]
+incremental = true # Compile your binary in smaller steps.
+
 [profile.release]
-lto = "fat"
+codegen-units = 1 # Allows LLVM to perform better optimization.
+lto = true # Enables link-time-optimizations.
+opt-level = "s" # Prioritizes small binary size. Use `3` if you prefer speed.
+panic = "abort" # Higher performance by disabling panic handlers.
+strip = true # Ensures debug symbols are removed.
 debug = false
-opt-level = "s"
-panic = "abort"
